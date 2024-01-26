@@ -46,4 +46,4 @@ jobs:
           prefect --no-prompt deploy --name "Deployment Apply" --name "Deployment Run" \
           --name "Deployment Storage" --name "Flow Pauses" --name "Flow Results" \
           --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" \
-          --name "Secret Block" --name "Task Results" --name "Task Retries"
+          --name "Hello World" --name "Secret Block" --name "Task Results" --name "Task Retries"
