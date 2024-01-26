@@ -1,0 +1,49 @@
+---
+name: Deploy Prefect integration-tests (workspace) flows - dev
+
+"on":
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+# Do not grant jobs any permissions by default
+permissions: {}
+
+jobs:
+  deploy_flows:
+    name: Deploy integration-tests flows
+    runs-on: ubuntu-latest
+    env:
+      PREFECT_CLOUD_URL: https://api.prefect.dev/api
+    permissions:
+      # required to read from the repo
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Prefect
+        shell: bash
+        run: pip install -q prefect
+
+      - name: Login to Prefect
+        run: |
+          prefect cloud login \
+          --key  ${{ secrets.PREFECT_DEV_INTEGRATION_TESTS_WORKSPACE_API_KEY }} \
+          --workspace prefect-dev/integration-tests
+        shell: bash
+
+      - name: Deploy all flows
+        shell: bash
+        run: |
+          prefect --no-prompt deploy --name "Deployment Apply" --name "Deployment Run" \
+          --name "Deployment Storage" --name "Flow Pauses" --name "Flow Results" \
+          --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" \
+          --name "Hello World" --name "Secret Block" --name "Task Results" --name "Task Retries"

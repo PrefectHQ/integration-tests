@@ -1,0 +1,156 @@
+name: flows
+prefect-version: 2.13.2
+
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/PrefectHQ/integration-tests
+      branch: main
+      access_token: "{{ prefect.blocks.secret.flows-contents-ro-pat }}"
+
+definitions:
+  descriptions:
+    integration_tests: &integration_tests |
+      Runs a test flow to test integration with our API
+
+  schedules:
+    every_five_minutes: &every_five_minutes
+      cron: "*/5 * * * *"
+
+  work_pools:
+    kubernetes_prd_internal_tools: &kubernetes_prd_internal_tools
+      name: kubernetes-prd-internal-tools
+
+    kubernetes_prd_internal_tools_helm: &kubernetes_prd_internal_tools_helm
+      name: kubernetes-prd-internal-tools
+      work_queue_name: helm
+      job_variables:
+        namespace: integration-tests-prd-helm
+        service_account_name: prefect-worker-cloud
+
+deployments:
+  # Prd Only
+  - name: Automations Tracer
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule:
+      interval: 30
+    entrypoint: flows/automations-tracer.py:automations_tracer_entry
+    work_pool:
+      name: kubernetes-prd-internal-tools
+      work_queue_name: integration-tests
+
+  - name: Hello Tasks - Helm
+    tags:
+      - helm-integration-tests
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/hello-tasks.py:hello_tasks_entry
+    work_pool: *kubernetes_prd_internal_tools_helm
+
+  - name: Hello World - Helm
+    tags:
+      - helm-integration-tests
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/hello-world.py:hello_world_entry
+    work_pool: *kubernetes_prd_internal_tools_helm
+
+  # Dev & Stg
+  - name: Deployment Apply
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/deployment-apply.py:deployment_apply_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Deployment Run
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/deployment-run.py:deployment_run_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Deployment Storage
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/deployment-storage.py:deployment_storage_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Flow Pauses
+    tags:
+      - expected:failure
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/flow-pauses.py:flow_pauses_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Flow Results
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/flow-results.py:flow_results_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Flow Retries With Subflows
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/flow-retries-with-subflows.py:flow_retries_subflows_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Flow Retries
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/flow-retries.py:flow_retries_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Hello Tasks
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/hello-tasks.py:hello_tasks_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Hello World
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/hello-world.py:hello_world_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Secret Block
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/secret-block.py:secret_block_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Task Results
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/task-results.py:task_results_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Task Retries
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/task-retries.py:task_retries_entry
+    work_pool: *kubernetes_prd_internal_tools
