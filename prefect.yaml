@@ -5,7 +5,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       repository: https://github.com/PrefectHQ/integration-tests
       branch: main
-      access_token: "{{ prefect.blocks.secret.flows-contents-ro-pat }}"
+      access_token: "{{ prefect.blocks.secret.integration-tests-contents-ro-pat }}"
 
 definitions:
   descriptions:
