@@ -40,6 +40,8 @@ jobs:
 
       - name: Deploy all flows
         shell: bash
-        run: |
-          prefect --no-prompt deploy --name "Automations Tracer" --name "Hello Tasks - Helm" \
+        run: >
+          prefect --no-prompt deploy
+          --name "Automations Tracer"
+          --name "Hello Tasks - Helm"
           --name "Hello World - Helm"

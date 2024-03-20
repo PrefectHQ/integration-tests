@@ -42,8 +42,21 @@ jobs:
 
       - name: Deploy all flows
         shell: bash
-        run: |
-          prefect --no-prompt deploy --name "Deployment Apply" --name "Deployment Run" \
-          --name "Deployment Storage" --name "Flow Pauses" --name "Flow Results" \
-          --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" \
-          --name "Secret Block" --name "Task Results" --name "Task Retries"
+        run: >
+          prefect --no-prompt deploy
+          --name "Integration test workspace - ensure automations exist"
+          --name "Automations - Reactive"
+          --name "Automations - Proactive"
+          --name "Automations - Compound"
+          --name "Automations - Sequence"
+          --name "Deployment Apply"
+          --name "Deployment Run"
+          --name "Deployment Storage"
+          --name "Flow Pauses"
+          --name "Flow Results"
+          --name "Flow Retries With Subflows"
+          --name "Flow Retries"
+          --name "Hello Tasks"
+          --name "Secret Block"
+          --name "Task Results"
+          --name "Task Retries"
