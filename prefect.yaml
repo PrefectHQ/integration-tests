@@ -66,7 +66,7 @@ deployments:
       - expected:success
     description: *integration_tests
     schedule: *every_three_hours
-    entrypoint: flows/automations-assessments.py:ensure_integrations_automations
+    entrypoint: flows/ensure-integration-automations.py:ensure_integrations_automations
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Automations - Reactive
@@ -74,7 +74,7 @@ deployments:
       - expected:success
     description: *integration_tests
     schedule: *every_five_minutes
-    entrypoint: flows/automations-assessments.py:assess_reactive_automation
+    entrypoint: flows/automation-assessments.py:assess_reactive_automation
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Automations - Proactive
@@ -82,7 +82,7 @@ deployments:
       - expected:success
     description: *integration_tests
     schedule: *every_five_minutes
-    entrypoint: flows/automations-assessments.py:assess_proactive_automation
+    entrypoint: flows/automation-assessments.py:assess_proactive_automation
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Automations - Compound
@@ -90,7 +90,7 @@ deployments:
       - expected:success
     description: *integration_tests
     schedule: *every_five_minutes
-    entrypoint: flows/automations-assessments.py:assess_compound_automation
+    entrypoint: flows/automation-assessments.py:assess_compound_automation
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Automations - Sequence
@@ -98,7 +98,7 @@ deployments:
       - expected:success
     description: *integration_tests
     schedule: *every_five_minutes
-    entrypoint: flows/automations-assessments.py:assess_sequence_automation
+    entrypoint: flows/automation-assessments.py:assess_sequence_automation
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Deployment Apply
