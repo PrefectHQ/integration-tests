@@ -15,6 +15,9 @@ definitions:
     every_five_minutes: &every_five_minutes
       cron: "*/5 * * * *"
 
+    every_three_hours: &every_three_hours
+      cron: "0 */3 * * *"
+
   work_pools:
     kubernetes_prd_internal_tools: &kubernetes_prd_internal_tools
       name: kubernetes-prd-internal-tools
@@ -58,6 +61,46 @@ deployments:
     work_pool: *kubernetes_prd_internal_tools_helm
 
   # Dev & Stg
+  - name: Integration test workspace - ensure automations exist
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_three_hours
+    entrypoint: flows/automations-assessments.py:ensure_integrations_automations
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Automations - Reactive
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/automations-assessments.py:assess_reactive_automation
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Automations - Proactive
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/automations-assessments.py:assess_proactive_automation
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Automations - Compound
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/automations-assessments.py:assess_compound_automation
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Automations - Sequence
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/automations-assessments.py:assess_sequence_automation
+    work_pool: *kubernetes_prd_internal_tools
+
   - name: Deployment Apply
     tags:
       - expected:success
