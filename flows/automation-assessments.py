@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
 from uuid import uuid4
 
 import pendulum
@@ -14,7 +15,10 @@ from prefect.events.filters import (
 )
 
 
-async def create_or_replace_automation(automation: dict[str, Any]) -> dict[str, Any]:
+@asynccontextmanager
+async def create_or_replace_automation(
+    automation: dict[str, Any],
+) -> AsyncGenerator[dict[str, Any], None]:
     logger = get_run_logger()
 
     async with get_client() as prefect:
@@ -29,7 +33,15 @@ async def create_or_replace_automation(automation: dict[str, Any]) -> dict[str, 
 
         automation = response.json()
         logger.info("Created automation %s", automation["id"])
-        return automation
+
+        logger.info("Waiting 5s for the automation to be loaded the triggers services")
+        await asyncio.sleep(5)
+
+        try:
+            yield automation
+        finally:
+            response = await prefect._client.delete(f"/automations/{automation['id']}")
+            response.raise_for_status()
 
 
 async def wait_for_event(event: str, resource_id: str) -> Event:
@@ -51,7 +63,7 @@ async def wait_for_event(event: str, resource_id: str) -> Event:
 @flow
 async def assess_reactive_automation():
     expected_resource = {"prefect.resource.id": f"integration:reactive:{uuid4()}"}
-    automation = await create_or_replace_automation(
+    async with create_or_replace_automation(
         {
             "name": "reactive-automation",
             "trigger": {
@@ -63,35 +75,34 @@ async def assess_reactive_automation():
             },
             "actions": [{"type": "do-nothing"}],
         }
-    )
-
-    listener = asyncio.create_task(
-        wait_for_event(
-            "prefect-cloud.automation.triggered",
-            f"prefect-cloud.automation.{automation['id']}",
-        )
-    )
-
-    async with PrefectCloudEventsClient() as events:
-        for i in range(5):
-            await events.emit(
-                Event(
-                    event="integration.example.event",
-                    resource=expected_resource,
-                    payload={"iteration": i},
-                )
+    ) as automation:
+        listener = asyncio.create_task(
+            wait_for_event(
+                "prefect-cloud.automation.triggered",
+                f"prefect-cloud.automation.{automation['id']}",
             )
+        )
 
-    # Wait until we see the automation triggered event, or fail if it takes longer
-    # than 60 seconds.  The reactive trigger should fire almost immediately.
-    async with asyncio.timeout(60):
-        await listener
+        async with PrefectCloudEventsClient() as events:
+            for i in range(5):
+                await events.emit(
+                    Event(
+                        event="integration.example.event",
+                        resource=expected_resource,
+                        payload={"iteration": i},
+                    )
+                )
+
+        # Wait until we see the automation triggered event, or fail if it takes longer
+        # than 60 seconds.  The reactive trigger should fire almost immediately.
+        async with asyncio.timeout(60):
+            await listener
 
 
 @flow
 async def assess_proactive_automation():
     expected_resource = {"prefect.resource.id": f"integration:proactive:{uuid4()}"}
-    automation = await create_or_replace_automation(
+    async with create_or_replace_automation(
         {
             "name": "proactive-automation",
             "trigger": {
@@ -106,35 +117,34 @@ async def assess_proactive_automation():
             },
             "actions": [{"type": "do-nothing"}],
         }
-    )
-
-    listener = asyncio.create_task(
-        wait_for_event(
-            "prefect-cloud.automation.triggered",
-            f"prefect-cloud.automation.{automation['id']}",
-        )
-    )
-
-    async with PrefectCloudEventsClient() as events:
-        for i in range(2):  # not enough events to close the automation
-            await events.emit(
-                Event(
-                    event="integration.example.event",
-                    resource=expected_resource,
-                    payload={"iteration": i},
-                )
+    ) as automation:
+        listener = asyncio.create_task(
+            wait_for_event(
+                "prefect-cloud.automation.triggered",
+                f"prefect-cloud.automation.{automation['id']}",
             )
+        )
 
-    # Wait until we see the automation triggered event, or fail if it takes longer
-    # than 60 seconds.  The proactive trigger should take a little over 15s to fire.
-    async with asyncio.timeout(60):
-        await listener
+        async with PrefectCloudEventsClient() as events:
+            for i in range(2):  # not enough events to close the automation
+                await events.emit(
+                    Event(
+                        event="integration.example.event",
+                        resource=expected_resource,
+                        payload={"iteration": i},
+                    )
+                )
+
+        # Wait until we see the automation triggered event, or fail if it takes longer
+        # than 60 seconds.  The proactive trigger should take a little over 15s to fire.
+        async with asyncio.timeout(60):
+            await listener
 
 
 @flow
 async def assess_compound_automation():
     expected_resource = {"prefect.resource.id": f"integration:compound:{uuid4()}"}
-    automation = await create_or_replace_automation(
+    async with create_or_replace_automation(
         {
             "name": "compound-automation",
             "trigger": {
@@ -160,42 +170,41 @@ async def assess_compound_automation():
             },
             "actions": [{"type": "do-nothing"}],
         }
-    )
-
-    listener = asyncio.create_task(
-        wait_for_event(
-            "prefect-cloud.automation.triggered",
-            f"prefect-cloud.automation.{automation['id']}",
+    ) as automation:
+        listener = asyncio.create_task(
+            wait_for_event(
+                "prefect-cloud.automation.triggered",
+                f"prefect-cloud.automation.{automation['id']}",
+            )
         )
-    )
 
-    async with PrefectCloudEventsClient() as events:
-        for i in range(5):
-            await events.emit(
-                Event(
-                    event="integration.example.event.A",
-                    resource=expected_resource,
-                    payload={"iteration": i},
+        async with PrefectCloudEventsClient() as events:
+            for i in range(5):
+                await events.emit(
+                    Event(
+                        event="integration.example.event.A",
+                        resource=expected_resource,
+                        payload={"iteration": i},
+                    )
                 )
-            )
-            await events.emit(
-                Event(
-                    event="integration.example.event.B",
-                    resource=expected_resource,
-                    payload={"iteration": i},
+                await events.emit(
+                    Event(
+                        event="integration.example.event.B",
+                        resource=expected_resource,
+                        payload={"iteration": i},
+                    )
                 )
-            )
 
-    # Wait until we see the automation triggered event, or fail if it takes longer
-    # than 60 seconds.  The compound trigger should fire almost immediately.
-    async with asyncio.timeout(60):
-        await listener
+        # Wait until we see the automation triggered event, or fail if it takes longer
+        # than 60 seconds.  The compound trigger should fire almost immediately.
+        async with asyncio.timeout(60):
+            await listener
 
 
 @flow
 async def assess_sequence_automation():
     expected_resource = {"prefect.resource.id": f"integration:sequence:{uuid4()}"}
-    automation = await create_or_replace_automation(
+    async with create_or_replace_automation(
         {
             "name": "sequence-automation",
             "trigger": {
@@ -220,48 +229,50 @@ async def assess_sequence_automation():
             },
             "actions": [{"type": "do-nothing"}],
         }
-    )
-
-    listener = asyncio.create_task(
-        wait_for_event(
-            "prefect-cloud.automation.triggered",
-            f"prefect-cloud.automation.{automation['id']}",
+    ) as automation:
+        listener = asyncio.create_task(
+            wait_for_event(
+                "prefect-cloud.automation.triggered",
+                f"prefect-cloud.automation.{automation['id']}",
+            )
         )
-    )
 
-    previous = None
-    async with PrefectCloudEventsClient() as events:
-        for i in range(5):
-            current = uuid4()
-            await events.emit(
-                Event(
-                    id=current,
-                    follows=previous,
-                    event="integration.example.event.A",
-                    resource=expected_resource,
-                    payload={"iteration": i},
+        previous = None
+        async with PrefectCloudEventsClient() as events:
+            for i in range(5):
+                current = uuid4()
+                await events.emit(
+                    Event(
+                        id=current,
+                        follows=previous,
+                        event="integration.example.event.A",
+                        resource=expected_resource,
+                        payload={"iteration": i},
+                    )
                 )
-            )
-            previous = current
+                previous = current
 
-    async with PrefectCloudEventsClient() as events:
-        for i in range(5):
-            current = uuid4()
-            await events.emit(
-                Event(
-                    id=current,
-                    follows=previous,
-                    event="integration.example.event.B",
-                    resource=expected_resource,
-                    payload={"iteration": i},
+        get_run_logger().info("Waiting 5s to make sure the sequence is unambiguous")
+        await asyncio.sleep(5)
+
+        async with PrefectCloudEventsClient() as events:
+            for i in range(5):
+                current = uuid4()
+                await events.emit(
+                    Event(
+                        id=current,
+                        follows=previous,
+                        event="integration.example.event.B",
+                        resource=expected_resource,
+                        payload={"iteration": i},
+                    )
                 )
-            )
-            previous = current
+                previous = current
 
-    # Wait until we see the automation triggered event, or fail if it takes longer
-    # than 60 seconds.  The compound trigger should fire almost immediately.
-    async with asyncio.timeout(60):
-        await listener
+        # Wait until we see the automation triggered event, or fail if it takes longer
+        # than 60 seconds.  The compound trigger should fire almost immediately.
+        async with asyncio.timeout(60):
+            await listener
 
 
 if __name__ == "__main__":
