@@ -191,22 +191,31 @@ async def assess_compound_automation():
             )
         )
 
+        previous = None
         async with PrefectCloudEventsClient() as events:
             for i in range(5):
+                current = uuid4()
                 await events.emit(
                     Event(
+                        id=current,
+                        follows=previous,
                         event="integration.example.event.A",
                         resource=expected_resource,
                         payload={"iteration": i},
                     )
                 )
+                previous = current
+                current = uuid4()
                 await events.emit(
                     Event(
+                        id=current,
+                        follows=previous,
                         event="integration.example.event.B",
                         resource=expected_resource,
                         payload={"iteration": i},
                     )
                 )
+                previous = current
 
         # Wait until we see the automation triggered event, or fail if it takes longer
         # than 60 seconds.  The compound trigger should fire almost immediately.
