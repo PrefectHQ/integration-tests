@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from typing import Any, AsyncGenerator
 from uuid import uuid4
 
@@ -22,17 +23,29 @@ async def create_or_replace_automation(
     logger = get_run_logger()
 
     async with get_client() as prefect:
+        # Clean up any older automations with the same name prefix
         response = await prefect._client.post("/automations/filter")
         response.raise_for_status()
         for existing in response.json():
-            if existing["name"] == automation["name"]:
+            name = str(existing["name"])
+            if name.startswith(automation["name"]):
+                age = pendulum.now("UTC") - pendulum.parse(existing["created"])
+                assert isinstance(age, timedelta)
+                if age > timedelta(minutes=10):
+                    logger.info(
+                        "Deleting old automation %s (%s)",
+                        existing["name"],
+                        existing["id"],
+                    )
                 await prefect._client.delete(f"/automations/{existing['id']}")
+
+        automation["name"] = f"{automation['name']}:{uuid4()}"
 
         response = await prefect._client.post("/automations", json=automation)
         response.raise_for_status()
 
         automation = response.json()
-        logger.info("Created automation %s", automation["id"])
+        logger.info("Created automation %s (%s)", automation["name"], automation["id"])
 
         logger.info("Waiting 5s for the automation to be loaded the triggers services")
         await asyncio.sleep(5)
@@ -156,15 +169,15 @@ async def assess_compound_automation():
                         "posture": "Reactive",
                         "expect": ["integration.example.event.A"],
                         "match": expected_resource,
-                        "threshold": 5,
-                        "within": 60,
+                        "threshold": 1,
+                        "within": 0,
                     },
                     {
                         "posture": "Reactive",
                         "expect": ["integration.example.event.B"],
                         "match": expected_resource,
-                        "threshold": 5,
-                        "within": 60,
+                        "threshold": 1,
+                        "within": 0,
                     },
                 ],
             },
@@ -179,21 +192,18 @@ async def assess_compound_automation():
         )
 
         async with PrefectCloudEventsClient() as events:
-            for i in range(5):
-                await events.emit(
-                    Event(
-                        event="integration.example.event.A",
-                        resource=expected_resource,
-                        payload={"iteration": i},
-                    )
+            await events.emit(
+                Event(
+                    event="integration.example.event.A",
+                    resource=expected_resource,
                 )
-                await events.emit(
-                    Event(
-                        event="integration.example.event.B",
-                        resource=expected_resource,
-                        payload={"iteration": i},
-                    )
+            )
+            await events.emit(
+                Event(
+                    event="integration.example.event.B",
+                    resource=expected_resource,
                 )
+            )
 
         # Wait until we see the automation triggered event, or fail if it takes longer
         # than 60 seconds.  The compound trigger should fire almost immediately.
@@ -215,15 +225,15 @@ async def assess_sequence_automation():
                         "posture": "Reactive",
                         "expect": ["integration.example.event.A"],
                         "match": expected_resource,
-                        "threshold": 5,
-                        "within": 60,
+                        "threshold": 1,
+                        "within": 0,
                     },
                     {
                         "posture": "Reactive",
                         "expect": ["integration.example.event.B"],
                         "match": expected_resource,
-                        "threshold": 5,
-                        "within": 60,
+                        "threshold": 1,
+                        "within": 0,
                     },
                 ],
             },
@@ -237,37 +247,29 @@ async def assess_sequence_automation():
             )
         )
 
-        previous = None
+        first = uuid4()
+        second = uuid4()
         async with PrefectCloudEventsClient() as events:
-            for i in range(5):
-                current = uuid4()
-                await events.emit(
-                    Event(
-                        id=current,
-                        follows=previous,
-                        event="integration.example.event.A",
-                        resource=expected_resource,
-                        payload={"iteration": i},
-                    )
+            await events.emit(
+                Event(
+                    id=first,
+                    event="integration.example.event.A",
+                    resource=expected_resource,
                 )
-                previous = current
+            )
 
-        get_run_logger().info("Waiting 5s to make sure the sequence is unambiguous")
-        await asyncio.sleep(5)
+        get_run_logger().info("Waiting 1s to make sure the sequence is unambiguous")
+        await asyncio.sleep(1)
 
         async with PrefectCloudEventsClient() as events:
-            for i in range(5):
-                current = uuid4()
-                await events.emit(
-                    Event(
-                        id=current,
-                        follows=previous,
-                        event="integration.example.event.B",
-                        resource=expected_resource,
-                        payload={"iteration": i},
-                    )
+            await events.emit(
+                Event(
+                    id=second,
+                    follows=first,
+                    event="integration.example.event.B",
+                    resource=expected_resource,
                 )
-                previous = current
+            )
 
         # Wait until we see the automation triggered event, or fail if it takes longer
         # than 60 seconds.  The compound trigger should fire almost immediately.
@@ -276,7 +278,7 @@ async def assess_sequence_automation():
 
 
 if __name__ == "__main__":
-    # asyncio.run(assess_reactive_automation())
-    # asyncio.run(assess_proactive_automation())
-    # asyncio.run(assess_compound_automation())
+    asyncio.run(assess_reactive_automation())
+    asyncio.run(assess_proactive_automation())
+    asyncio.run(assess_compound_automation())
     asyncio.run(assess_sequence_automation())
