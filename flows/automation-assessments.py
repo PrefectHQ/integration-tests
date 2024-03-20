@@ -2,10 +2,16 @@ import asyncio
 from typing import Any
 from uuid import uuid4
 
+import pendulum
 from prefect import flow, get_client, get_run_logger
 from prefect.events import Event
 from prefect.events.clients import PrefectCloudEventsClient, PrefectCloudEventSubscriber
-from prefect.events.filters import EventFilter, EventNameFilter, EventResourceFilter
+from prefect.events.filters import (
+    EventFilter,
+    EventNameFilter,
+    EventOccurredFilter,
+    EventResourceFilter,
+)
 
 
 async def create_or_replace_automation(automation: dict[str, Any]) -> dict[str, Any]:
@@ -30,6 +36,7 @@ async def wait_for_event(event: str, resource_id: str) -> Event:
     logger = get_run_logger()
 
     filter = EventFilter(
+        occurred=EventOccurredFilter(since=pendulum.now("UTC")),
         event=EventNameFilter(name=[]),
         resource=EventResourceFilter(id=[resource_id]),
     )
@@ -222,28 +229,34 @@ async def assess_sequence_automation():
         )
     )
 
+    previous = None
     async with PrefectCloudEventsClient() as events:
         for i in range(5):
+            current = uuid4()
             await events.emit(
                 Event(
+                    id=current,
+                    follows=previous,
                     event="integration.example.event.A",
                     resource=expected_resource,
                     payload={"iteration": i},
                 )
             )
-
-    # give some space between events to make sure the sequence is clear
-    await asyncio.sleep(5)
+            previous = current
 
     async with PrefectCloudEventsClient() as events:
         for i in range(5):
+            current = uuid4()
             await events.emit(
                 Event(
+                    id=current,
+                    follows=previous,
                     event="integration.example.event.B",
                     resource=expected_resource,
                     payload={"iteration": i},
                 )
             )
+            previous = current
 
     # Wait until we see the automation triggered event, or fail if it takes longer
     # than 60 seconds.  The compound trigger should fire almost immediately.
