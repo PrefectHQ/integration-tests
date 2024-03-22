@@ -119,7 +119,7 @@ async def ensure_integrations_automations():
                 ],
                 "for_each": ["prefect.resource.id"],
                 "threshold": 1,
-                "within": 60,
+                "within": 90,
             },
             "actions": [
                 {
