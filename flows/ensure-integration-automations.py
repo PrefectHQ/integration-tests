@@ -119,7 +119,7 @@ async def ensure_integrations_automations():
                 ],
                 "for_each": ["prefect.resource.id"],
                 "threshold": 1,
-                "within": 90,
+                "within": 300,
             },
             "actions": [
                 {
@@ -158,7 +158,7 @@ async def ensure_integrations_automations():
                 ],
                 "for_each": ["prefect.resource.id"],
                 "threshold": 1,
-                "within": 600,
+                "within": 900,
             },
             "actions": [
                 {
@@ -188,7 +188,7 @@ async def ensure_integrations_automations():
             ),
             "trigger": {
                 "posture": "Proactive",
-                "after": ["prefect.work-pool.not_ready"],
+                "after": ["prefect.work-pool.not-ready"],
                 "expect": ["prefect.work-pool.ready"],
                 "for_each": ["prefect.resource.id"],
                 "threshold": 1,
