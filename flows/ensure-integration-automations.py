@@ -49,14 +49,26 @@ async def ensure_integrations_automations():
                 {
                     "type": "send-notification",
                     "block_document_id": NOTIFICATION_BLOCK,
-                    "subject": "Prefect flow run failed",
+                    "subject": (
+                        "Flow run "
+                        "{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }} "
+                        "{{ event.resource['prefect.state-name']|lower}} unexpectedly"
+                    ),
                     "body": textwrap.dedent(
                         """
-                        Flow run {{ flow.name }}/{{ flow_run.name }} observed in state `{{ flow_run.state.name }}` at {{ flow_run.state.timestamp }}.
-                        Flow ID: {{ flow_run.flow_id }}
-                        Flow run ID: {{ flow_run.id }}
-                        Flow run URL: {{ flow_run|ui_url }}
-                        State message: {{ flow_run.state.message }}
+                        State message:
+
+                        ```
+                        {{ event.resource['prefect.state-message'] }}
+                        ```
+
+                        This integration flow run was expected to succeed but failed.
+                        To investigate further:
+
+                        * Flow run: [{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }}]({{ event.resource|ui_url }})
+                        {% if event.resource_in_role['work-pool'] %}
+                        * Work pool: [{{ event.resource_in_role['work-pool'].name }}]({{ event.resource_in_role['work-pool']|ui_url }})
+                        {% endif %}
                     """
                     ).strip(),
                 }
@@ -85,14 +97,26 @@ async def ensure_integrations_automations():
                 {
                     "type": "send-notification",
                     "block_document_id": NOTIFICATION_BLOCK,
-                    "subject": "Prefect flow run failed",
+                    "subject": (
+                        "Flow run "
+                        "{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }} "
+                        "{{ event.resource['prefect.state-name']|lower}} unexpectedly"
+                    ),
                     "body": textwrap.dedent(
                         """
-                        Flow run {{ flow.name }}/{{ flow_run.name }} observed in state `{{ flow_run.state.name }}` at {{ flow_run.state.timestamp }}.
-                        Flow ID: {{ flow_run.flow_id }}
-                        Flow run ID: {{ flow_run.id }}
-                        Flow run URL: {{ flow_run|ui_url }}
-                        State message: {{ flow_run.state.message }}
+                        State message:
+
+                        ```
+                        {{ event.resource['prefect.state-message'] }}
+                        ```
+
+                        This integration flow run was expected to fail, but it succeeded.
+                        To investigate further:
+
+                        * Flow run: [{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }}]({{ event.resource|ui_url }})
+                        {% if event.resource_in_role['work-pool'] %}
+                        * Work pool: [{{ event.resource_in_role['work-pool'].name }}]({{ event.resource_in_role['work-pool']|ui_url }})
+                        {% endif %}
                     """
                     ).strip(),
                 }
@@ -125,14 +149,22 @@ async def ensure_integrations_automations():
                 {
                     "type": "send-notification",
                     "block_document_id": NOTIFICATION_BLOCK,
-                    "subject": "Prefect flow run stuck pending",
+                    "subject": (
+                        "Flow run "
+                        "{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }} "
+                        "stuck `Pending` for more than 5 minutes"
+                    ),
                     "body": textwrap.dedent(
                         """
-                        Flow run {{ flow.name }}/{{ flow_run.name }} observed in state `{{ flow_run.state.name }}` at {{ flow_run.state.timestamp }}.
-                        Flow ID: {{ flow_run.flow_id }}
-                        Flow run ID: {{ flow_run.id }}
-                        Flow run URL: {{ flow_run|ui_url }}
-                        State message: {{ flow_run.state.message }}
+                        This integration flow run entered `Pending` but didn't move on
+                        to `Running` after 5 minutes.
+
+                        To investigate further:
+
+                        * Flow run: [{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }}]({{ event.resource|ui_url }})
+                        {% if event.resource_in_role['work-pool'] %}
+                        * Work pool: [{{ event.resource_in_role['work-pool'].name }}]({{ event.resource_in_role['work-pool']|ui_url }})
+                        {% endif %}
                     """
                     ).strip(),
                 }
@@ -164,14 +196,22 @@ async def ensure_integrations_automations():
                 {
                     "type": "send-notification",
                     "block_document_id": NOTIFICATION_BLOCK,
-                    "subject": "Prefect flow run stuck running",
+                    "subject": (
+                        "Flow run "
+                        "{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }} "
+                        "stuck `Running` for more than 15 minutes"
+                    ),
                     "body": textwrap.dedent(
                         """
-                        Flow run {{ flow.name }}/{{ flow_run.name }} observed in state `{{ flow_run.state.name }}` at {{ flow_run.state.timestamp }}.
-                        Flow ID: {{ flow_run.flow_id }}
-                        Flow run ID: {{ flow_run.id }}
-                        Flow run URL: {{ flow_run|ui_url }}
-                        State message: {{ flow_run.state.message }}
+                        This integration flow run entered `Running` but didn't move on
+                        to a terminal state after 15 minutes.
+
+                        To investigate further:
+
+                        * Flow run: [{{ event.resource_in_role['flow'].name }}/{{ event.resource.name }}]({{ event.resource|ui_url }})
+                        {% if event.resource_in_role['work-pool'] %}
+                        * Work pool: [{{ event.resource_in_role['work-pool'].name }}]({{ event.resource_in_role['work-pool']|ui_url }})
+                        {% endif %}
                     """
                     ).strip(),
                 }
@@ -198,12 +238,15 @@ async def ensure_integrations_automations():
                 {
                     "type": "send-notification",
                     "block_document_id": NOTIFICATION_BLOCK,
-                    "subject": "Prefect work pool '{{ work_pool.name }}' has entered status '{{ work_pool.status }}'",
+                    "subject": "Work pool '{{ event.resource.name }}' is not ready",
                     "body": textwrap.dedent(
                         """
-                        Name: {{ work_pool.name }}
-                        Status: {{ work_pool.status }}
-                        URL: {{ work_pool|ui_url }}
+                        This work pool entered a `NOT_READY` status 10 minutes ago and
+                        has not recovered yet.
+
+                        To investigate further:
+
+                        * Work pool: [{{ event.resource.name }}]({{ event.resource|ui_url }})
                     """
                     ).strip(),
                 }
