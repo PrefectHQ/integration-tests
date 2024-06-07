@@ -58,15 +58,18 @@ async def create_or_replace_automation(
             response.raise_for_status()
 
 
-async def wait_for_event(event: str, resource_id: str) -> Event:
+async def wait_for_event(
+    listening: asyncio.Event, event_name: str, resource_id: str
+) -> Event:
     logger = get_run_logger()
 
     filter = EventFilter(
         occurred=EventOccurredFilter(since=pendulum.now("UTC")),
-        event=EventNameFilter(name=[]),
+        event=EventNameFilter(name=[event_name]),
         resource=EventResourceFilter(id=[resource_id]),
     )
     async with PrefectCloudEventSubscriber(filter=filter) as subscriber:
+        listening.set()
         async for event in subscriber:
             logger.info(event)
             return event
@@ -91,12 +94,15 @@ async def assess_reactive_automation():
                 "actions": [{"type": "do-nothing"}],
             }
         ) as automation:
+            listening = asyncio.Event()
             listener = asyncio.create_task(
                 wait_for_event(
+                    listening,
                     "prefect-cloud.automation.triggered",
                     f"prefect-cloud.automation.{automation['id']}",
                 )
             )
+            await listening.wait()
 
             async with PrefectCloudEventsClient() as events:
                 for i in range(5):
@@ -108,10 +114,14 @@ async def assess_reactive_automation():
                         )
                     )
 
-            # Wait until we see the automation triggered event, or fail if it takes longer
-            # than 60 seconds.  The reactive trigger should fire almost immediately.
-            async with asyncio.timeout(60):
-                await listener
+            # Wait until we see the automation triggered event, or fail if it takes
+            # longer than 60 seconds.  The reactive trigger should fire almost
+            # immediately.
+            try:
+                async with asyncio.timeout(60):
+                    await listener
+            except asyncio.TimeoutError:
+                raise Exception("Reactive automation did not trigger within 60s")
 
 
 @flow
@@ -124,8 +134,8 @@ async def assess_proactive_automation():
                 "trigger": {
                     "posture": "Proactive",
                     "expect": ["integration.example.event"],
-                    # Doing it for_each resource ID should prevent it from firing endlessly
-                    # while the integration tests are _not_ running
+                    # Doing it for_each resource ID should prevent it from firing
+                    # endlessly while the integration tests are _not_ running
                     "for_each": ["prefect.resource.id"],
                     "match": expected_resource,
                     "threshold": 5,
@@ -134,12 +144,15 @@ async def assess_proactive_automation():
                 "actions": [{"type": "do-nothing"}],
             }
         ) as automation:
+            listening = asyncio.Event()
             listener = asyncio.create_task(
                 wait_for_event(
+                    listening,
                     "prefect-cloud.automation.triggered",
                     f"prefect-cloud.automation.{automation['id']}",
                 )
             )
+            await listening.wait()
 
             async with PrefectCloudEventsClient() as events:
                 for i in range(2):  # not enough events to close the automation
@@ -151,10 +164,14 @@ async def assess_proactive_automation():
                         )
                     )
 
-            # Wait until we see the automation triggered event, or fail if it takes longer
-            # than 60 seconds.  The proactive trigger should take a little over 15s to fire.
-            async with asyncio.timeout(60):
-                await listener
+            # Wait until we see the automation triggered event, or fail if it takes
+            # longer than 60 seconds.  The proactive trigger should take a little over
+            # 15s to fire.
+            try:
+                async with asyncio.timeout(60):
+                    await listener
+            except asyncio.TimeoutError:
+                raise Exception("Proactive automation did not trigger within 60s")
 
 
 @flow
@@ -188,12 +205,15 @@ async def assess_compound_automation():
                 "actions": [{"type": "do-nothing"}],
             }
         ) as automation:
+            listening = asyncio.Event()
             listener = asyncio.create_task(
                 wait_for_event(
+                    listening,
                     "prefect-cloud.automation.triggered",
                     f"prefect-cloud.automation.{automation['id']}",
                 )
             )
+            await listening.wait()
 
             async with PrefectCloudEventsClient() as events:
                 await events.emit(
@@ -209,10 +229,14 @@ async def assess_compound_automation():
                     )
                 )
 
-            # Wait until we see the automation triggered event, or fail if it takes longer
-            # than 60 seconds.  The compound trigger should fire almost immediately.
-            async with asyncio.timeout(60):
-                await listener
+            # Wait until we see the automation triggered event, or fail if it takes
+            # longer than 60 seconds.  The compound trigger should fire almost
+            # immediately.
+            try:
+                async with asyncio.timeout(60):
+                    await listener
+            except asyncio.TimeoutError:
+                raise Exception("Compound automation did not trigger within 60s")
 
 
 @flow
@@ -245,12 +269,15 @@ async def assess_sequence_automation():
                 "actions": [{"type": "do-nothing"}],
             }
         ) as automation:
+            listening = asyncio.Event()
             listener = asyncio.create_task(
                 wait_for_event(
+                    listening,
                     "prefect-cloud.automation.triggered",
                     f"prefect-cloud.automation.{automation['id']}",
                 )
             )
+            await listening.wait()
 
             first = uuid4()
             second = uuid4()
@@ -276,10 +303,14 @@ async def assess_sequence_automation():
                     )
                 )
 
-            # Wait until we see the automation triggered event, or fail if it takes longer
-            # than 60 seconds.  The compound trigger should fire almost immediately.
-            async with asyncio.timeout(60):
-                await listener
+            # Wait until we see the automation triggered event, or fail if it takes
+            # longer than 60 seconds.  The compound trigger should fire almost
+            # immediately.
+            try:
+                async with asyncio.timeout(60):
+                    await listener
+            except asyncio.TimeoutError:
+                raise Exception("Sequence automation did not trigger within 60s")
 
 
 if __name__ == "__main__":
