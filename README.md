@@ -4,9 +4,6 @@ We run an assortment of `integration tests` flows for the purpose of evaluating 
 We run the following flows on a regular interval in both the dev & stg environments. Unexpected failures are reported to the relevant environment channel `#alerts-ENV-cloud2`.
 
 flows:
-- deployment-apply
-- deployment-run
-- deployment-storage
 - flow-pauses
 - flow-results
 - flow-retries-with-subflows
@@ -35,9 +32,6 @@ flows:
 Similarly to the `helm` workqueue, we are running an always up-to-date server/worker combo. We run a similar set of test flows here to ensure the latest Helm release of the `server` chart is functioning as expected.
 
 flows:
-- deployment-apply
-- deployment-run
-- deployment-storage
 - flow-pauses
 - flow-results
 - flow-retries-with-subflows
