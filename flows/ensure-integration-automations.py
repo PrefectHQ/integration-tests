@@ -37,7 +37,11 @@ async def ensure_integrations_automations():
             ),
             "trigger": {
                 "posture": "Reactive",
-                "expect": ["prefect.flow-run.Failed", "prefect.flow-run.Crashed"],
+                "expect": [
+                    "prefect.flow-run.Failed",
+                    "prefect.flow-run.Crashed",
+                    "prefect.flow-run.TimedOut",
+                ],
                 "threshold": 1,
                 "within": 0,
                 "match_related": {
@@ -187,6 +191,7 @@ async def ensure_integrations_automations():
                     "prefect.flow-run.Failed",
                     "prefect.flow-run.Completed",
                     "prefect.flow-run.Paused",
+                    "prefect.flow-run.TimedOut",
                 ],
                 "for_each": ["prefect.resource.id"],
                 "threshold": 1,
