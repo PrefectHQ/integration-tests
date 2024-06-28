@@ -16,6 +16,11 @@ from prefect.events.filters import (
     EventResourceFilter,
 )
 
+# The integration tests are scheduled to run every 5 minutes, so we should be timing
+# out more quickly than that to avoid multiple runs stacking up
+INTEGRATION_TEST_INTERVAL = 5 * 60
+INTEGRATION_TEST_TIMEOUT = INTEGRATION_TEST_INTERVAL - 60
+
 
 @asynccontextmanager
 async def create_or_replace_automation(
@@ -32,7 +37,7 @@ async def create_or_replace_automation(
             if name.startswith(automation["name"]):
                 age = pendulum.now("UTC") - pendulum.parse(existing["created"])
                 assert isinstance(age, timedelta)
-                if age > timedelta(minutes=10):
+                if age > timedelta(seconds=INTEGRATION_TEST_INTERVAL * 3):
                     logger.info(
                         "Deleting old automation %s (%s)",
                         existing["name"],
@@ -77,9 +82,11 @@ async def wait_for_event(
     raise Exception("Disconnected without an event")
 
 
-@flow
+@flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_reactive_automation():
-    async with concurrency("assess_reactive_automation", timeout_seconds=600):
+    async with concurrency(
+        "assess_reactive_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
+    ):
         expected_resource = {"prefect.resource.id": f"integration:reactive:{uuid4()}"}
         async with create_or_replace_automation(
             {
@@ -124,9 +131,11 @@ async def assess_reactive_automation():
                 raise Exception("Reactive automation did not trigger within 60s")
 
 
-@flow
+@flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_proactive_automation():
-    async with concurrency("assess_proactive_automation", timeout_seconds=600):
+    async with concurrency(
+        "assess_proactive_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
+    ):
         expected_resource = {"prefect.resource.id": f"integration:proactive:{uuid4()}"}
         async with create_or_replace_automation(
             {
@@ -174,9 +183,11 @@ async def assess_proactive_automation():
                 raise Exception("Proactive automation did not trigger within 60s")
 
 
-@flow
+@flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_compound_automation():
-    async with concurrency("assess_compound_automation", timeout_seconds=600):
+    async with concurrency(
+        "assess_compound_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
+    ):
         expected_resource = {"prefect.resource.id": f"integration:compound:{uuid4()}"}
         async with create_or_replace_automation(
             {
@@ -239,9 +250,11 @@ async def assess_compound_automation():
                 raise Exception("Compound automation did not trigger within 60s")
 
 
-@flow
+@flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_sequence_automation():
-    async with concurrency("assess_sequence_automation", timeout_seconds=600):
+    async with concurrency(
+        "assess_sequence_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
+    ):
         expected_resource = {"prefect.resource.id": f"integration:sequence:{uuid4()}"}
         async with create_or_replace_automation(
             {
