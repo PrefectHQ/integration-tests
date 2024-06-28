@@ -59,5 +59,6 @@ jobs:
           --name "Hello Tasks"
           --name "Hello World"
           --name "Secret Block"
+          --name "Task Burst"
           --name "Task Results"
           --name "Task Retries"
