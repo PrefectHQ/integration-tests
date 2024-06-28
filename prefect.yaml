@@ -101,30 +101,6 @@ deployments:
     entrypoint: flows/automation-assessments.py:assess_sequence_automation
     work_pool: *kubernetes_prd_internal_tools
 
-  - name: Deployment Apply
-    tags:
-      - expected:success
-    description: *integration_tests
-    schedule: *every_five_minutes
-    entrypoint: flows/deployment-apply.py:deployment_apply_entry
-    work_pool: *kubernetes_prd_internal_tools
-
-  - name: Deployment Run
-    tags:
-      - expected:success
-    description: *integration_tests
-    schedule: *every_five_minutes
-    entrypoint: flows/deployment-run.py:deployment_run_entry
-    work_pool: *kubernetes_prd_internal_tools
-
-  - name: Deployment Storage
-    tags:
-      - expected:success
-    description: *integration_tests
-    schedule: *every_five_minutes
-    entrypoint: flows/deployment-storage.py:deployment_storage_entry
-    work_pool: *kubernetes_prd_internal_tools
-
   - name: Flow Pauses
     tags:
       - expected:failure

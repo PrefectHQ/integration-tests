@@ -53,5 +53,5 @@ PREFECT_API_URL = "http://server.private.prefect.cloud/api"
 Then run:
 ```
 prefect profiles use server
-prefect --no-prompt deploy --name "Deployment Apply" --name "Deployment Run" --name "Deployment Storage" --name "Flow Pauses" --name "Flow Results" --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" --name "Hello World" --name "Secret Block" --name "Task Burst" --name "Task Results" --name "Task Retries"
+prefect --no-prompt deploy --name "Flow Pauses" --name "Flow Results" --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" --name "Hello World" --name "Secret Block" --name "Task Burst" --name "Task Results" --name "Task Retries"
 ```
