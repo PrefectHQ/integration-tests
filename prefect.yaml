@@ -180,6 +180,14 @@ deployments:
     schedule: *every_five_minutes
     entrypoint: flows/secret-block.py:secret_block_entry
     work_pool: *kubernetes_prd_internal_tools
+  
+  - name: Task Burst
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/task-bursts.py:burst_tasks
+    work_pool: *kubernetes_prd_internal_tools
 
   - name: Task Results
     tags:

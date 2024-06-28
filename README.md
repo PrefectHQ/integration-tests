@@ -11,7 +11,8 @@ flows:
 - hello-tasks
 - hello-world
 - secret-block
-- task-restuls
+- task-bursts
+- task-results
 - task-retries
 
 
@@ -39,7 +40,8 @@ flows:
 - hello-tasks
 - hello-world
 - secret-block
-- task-restuls
+- task-bursts
+- task-results
 - task-retries
 
 To re-register all of these flows, first adjust your prefect profile to contain the following:
@@ -51,5 +53,5 @@ PREFECT_API_URL = "http://server.private.prefect.cloud/api"
 Then run:
 ```
 prefect profiles use server
-prefect --no-prompt deploy --name "Deployment Apply" --name "Deployment Run" --name "Deployment Storage" --name "Flow Pauses" --name "Flow Results" --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" --name "Hello World" --name "Secret Block" --name "Task Results" --name "Task Retries"
+prefect --no-prompt deploy --name "Deployment Apply" --name "Deployment Run" --name "Deployment Storage" --name "Flow Pauses" --name "Flow Results" --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" --name "Hello World" --name "Secret Block" --name "Task Burst" --name "Task Results" --name "Task Retries"
 ```
