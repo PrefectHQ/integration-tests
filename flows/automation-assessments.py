@@ -68,12 +68,15 @@ async def wait_for_event(
 ) -> Event:
     logger = get_run_logger()
 
+    logger.info("Starting event subscriber...")
+
     filter = EventFilter(
         occurred=EventOccurredFilter(since=pendulum.now("UTC")),
         event=EventNameFilter(name=[event_name]),
         resource=EventResourceFilter(id=[resource_id]),
     )
     async with PrefectCloudEventSubscriber(filter=filter) as subscriber:
+        logger.info("Subscribed and waiting for events...")
         listening.set()
         async for event in subscriber:
             logger.info(event)
@@ -84,6 +87,7 @@ async def wait_for_event(
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_reactive_automation():
+    logger = get_run_logger()
     async with concurrency(
         "assess_reactive_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
     ):
@@ -111,6 +115,7 @@ async def assess_reactive_automation():
             )
             await listening.wait()
 
+            logger.info("Emitting example events for %r...", expected_resource)
             async with PrefectCloudEventsClient() as events:
                 for i in range(5):
                     await events.emit(
@@ -121,6 +126,7 @@ async def assess_reactive_automation():
                         )
                     )
 
+            logger.info("Waiting for automation to fire...")
             # Wait until we see the automation triggered event, or fail if it takes
             # longer than 60 seconds.  The reactive trigger should fire almost
             # immediately.
@@ -133,6 +139,7 @@ async def assess_reactive_automation():
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_proactive_automation():
+    logger = get_run_logger()
     async with concurrency(
         "assess_proactive_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
     ):
@@ -163,6 +170,7 @@ async def assess_proactive_automation():
             )
             await listening.wait()
 
+            logger.info("Emitting example events for %r...", expected_resource)
             async with PrefectCloudEventsClient() as events:
                 for i in range(2):  # not enough events to close the automation
                     await events.emit(
@@ -173,6 +181,7 @@ async def assess_proactive_automation():
                         )
                     )
 
+            logger.info("Waiting for automation to fire...")
             # Wait until we see the automation triggered event, or fail if it takes
             # longer than 60 seconds.  The proactive trigger should take a little over
             # 15s to fire.
@@ -185,6 +194,7 @@ async def assess_proactive_automation():
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_compound_automation():
+    logger = get_run_logger()
     async with concurrency(
         "assess_compound_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
     ):
@@ -226,6 +236,7 @@ async def assess_compound_automation():
             )
             await listening.wait()
 
+            logger.info("Emitting example events for %r...", expected_resource)
             async with PrefectCloudEventsClient() as events:
                 await events.emit(
                     Event(
@@ -240,6 +251,7 @@ async def assess_compound_automation():
                     )
                 )
 
+            logger.info("Waiting for automation to fire...")
             # Wait until we see the automation triggered event, or fail if it takes
             # longer than 60 seconds.  The compound trigger should fire almost
             # immediately.
@@ -252,6 +264,7 @@ async def assess_compound_automation():
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
 async def assess_sequence_automation():
+    logger = get_run_logger()
     async with concurrency(
         "assess_sequence_automation", timeout_seconds=INTEGRATION_TEST_TIMEOUT
     ):
@@ -292,6 +305,7 @@ async def assess_sequence_automation():
             )
             await listening.wait()
 
+            logger.info("Emitting example events for %r...", expected_resource)
             first = uuid4()
             second = uuid4()
             async with PrefectCloudEventsClient() as events:
@@ -316,6 +330,7 @@ async def assess_sequence_automation():
                     )
                 )
 
+            logger.info("Waiting for automation to fire...")
             # Wait until we see the automation triggered event, or fail if it takes
             # longer than 60 seconds.  The compound trigger should fire almost
             # immediately.
