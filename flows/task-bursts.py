@@ -7,7 +7,7 @@ def say_hello(name: str):
 
 
 @flow
-def burst_tasks(name: str = "world", count: int = 500):
+def burst_tasks(name: str = "world", count: int = 250):
     [task_fut.wait() for task_fut in say_hello.map(f"{name}-{i}" for i in range(count))]
 
 
