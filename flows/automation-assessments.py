@@ -8,7 +8,7 @@ import pendulum
 from prefect import flow, get_client, get_run_logger
 from prefect.concurrency.asyncio import concurrency
 from prefect.events import Event
-from prefect.events.clients import PrefectCloudEventsClient, PrefectCloudEventSubscriber
+from prefect.events.clients import get_events_client, get_events_subscriber
 from prefect.events.filters import (
     EventFilter,
     EventNameFilter,
@@ -75,7 +75,7 @@ async def wait_for_event(
         event=EventNameFilter(name=[event_name]),
         resource=EventResourceFilter(id=[resource_id]),
     )
-    async with PrefectCloudEventSubscriber(filter=filter) as subscriber:
+    async with get_events_subscriber(filter=filter) as subscriber:
         logger.info("Subscribed and waiting for events...")
         listening.set()
         async for event in subscriber:
@@ -116,7 +116,7 @@ async def assess_reactive_automation():
             await listening.wait()
 
             logger.info("Emitting example events for %r...", expected_resource)
-            async with PrefectCloudEventsClient() as events:
+            async with get_events_client() as events:
                 for i in range(5):
                     await events.emit(
                         Event(
@@ -171,7 +171,7 @@ async def assess_proactive_automation():
             await listening.wait()
 
             logger.info("Emitting example events for %r...", expected_resource)
-            async with PrefectCloudEventsClient() as events:
+            async with get_events_client() as events:
                 for i in range(2):  # not enough events to close the automation
                     await events.emit(
                         Event(
@@ -237,7 +237,7 @@ async def assess_compound_automation():
             await listening.wait()
 
             logger.info("Emitting example events for %r...", expected_resource)
-            async with PrefectCloudEventsClient() as events:
+            async with get_events_client() as events:
                 await events.emit(
                     Event(
                         event="integration.example.event.A",
@@ -308,7 +308,7 @@ async def assess_sequence_automation():
             logger.info("Emitting example events for %r...", expected_resource)
             first = uuid4()
             second = uuid4()
-            async with PrefectCloudEventsClient() as events:
+            async with get_events_client() as events:
                 await events.emit(
                     Event(
                         id=first,
@@ -320,7 +320,7 @@ async def assess_sequence_automation():
             get_run_logger().info("Waiting 1s to make sure the sequence is unambiguous")
             await asyncio.sleep(1)
 
-            async with PrefectCloudEventsClient() as events:
+            async with get_events_client() as events:
                 await events.emit(
                     Event(
                         id=second,
