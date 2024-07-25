@@ -317,8 +317,8 @@ async def assess_sequence_automation():
                     )
                 )
 
-            get_run_logger().info("Waiting 1s to make sure the sequence is unambiguous")
-            await asyncio.sleep(1)
+            get_run_logger().info("Waiting 5s to make sure the sequence is unambiguous")
+            await asyncio.sleep(5)
 
             async with get_events_client() as events:
                 await events.emit(
