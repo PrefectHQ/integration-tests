@@ -4,7 +4,7 @@ prefect-version: 2.13.2
 pull:
   - prefect.deployments.steps.git_clone:
       repository: https://github.com/PrefectHQ/integration-tests
-      branch: main
+      branch: self-managed-release-tests
 
 definitions:
   descriptions:
@@ -20,14 +20,14 @@ definitions:
 
   work_pools:
     kubernetes_prd_internal_tools: &kubernetes_prd_internal_tools
-      name: kubernetes-prd-internal-tools
+      name: test-kuber
 
     kubernetes_prd_internal_tools_helm: &kubernetes_prd_internal_tools_helm
-      name: kubernetes-prd-internal-tools
+      name: test-kuber-helm
       work_queue_name: helm
-      job_variables:
-        namespace: integration-tests-prd-helm
-        service_account_name: prefect-worker-cloud
+      # job_variables:
+      #   namespace: integration-tests-prd-helm
+      #   service_account_name: prefect-worker-cloud
 
 deployments:
   # Prd Only
