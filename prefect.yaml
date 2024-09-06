@@ -1,5 +1,5 @@
 name: flows
-prefect-version: 2.13.2
+prefect-version: 3.0.0
 
 pull:
   - prefect.deployments.steps.git_clone:
@@ -156,7 +156,7 @@ deployments:
     schedule: *every_five_minutes
     entrypoint: flows/secret-block.py:secret_block_entry
     work_pool: *kubernetes_prd_internal_tools
-  
+
   - name: Task Burst
     tags:
       - expected:success
