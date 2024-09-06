@@ -15,7 +15,7 @@ jobs:
     name: Deploy integration-tests flows
     runs-on: ubuntu-latest
     env:
-      PREFECT_CLOUD_URL: https://api.stg.prefect.dev/api
+      PREFECT_CLOUD_API_URL: https://api.stg.prefect.dev/api
     permissions:
       # required to read from the repo
       contents: read
