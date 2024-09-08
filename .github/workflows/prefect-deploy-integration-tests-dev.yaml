@@ -44,10 +44,9 @@ jobs:
         shell: bash
         run: >
           prefect --no-prompt deploy
-          --name "Integration test workspace - ensure automations exist"
-          --name "Automations - Reactive"
-          --name "Automations - Proactive"
           --name "Automations - Compound"
+          --name "Automations - Proactive"
+          --name "Automations - Reactive"
           --name "Automations - Sequence"
           --name "Flow Pauses"
           --name "Flow Results"
@@ -55,6 +54,7 @@ jobs:
           --name "Flow Retries"
           --name "Hello Tasks"
           --name "Hello World"
+          --name "Integration test workspace - ensure automations exist"
           --name "Secret Block"
           --name "Task Burst"
           --name "Task Results"
