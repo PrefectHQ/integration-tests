@@ -61,20 +61,12 @@ deployments:
     work_pool: *kubernetes_prd_internal_tools_helm
 
   # Dev & Stg
-  - name: Integration test workspace - ensure automations exist
-    tags:
-      - expected:success
-    description: *integration_tests
-    schedule: *every_three_hours
-    entrypoint: flows/ensure-integration-automations.py:ensure_integrations_automations
-    work_pool: *kubernetes_prd_internal_tools
-
-  - name: Automations - Reactive
+  - name: Automations - Compound
     tags:
       - expected:success
     description: *integration_tests
     schedule: *every_five_minutes
-    entrypoint: flows/automation-assessments.py:assess_reactive_automation
+    entrypoint: flows/automation-assessments.py:assess_compound_automation
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Automations - Proactive
@@ -85,12 +77,12 @@ deployments:
     entrypoint: flows/automation-assessments.py:assess_proactive_automation
     work_pool: *kubernetes_prd_internal_tools
 
-  - name: Automations - Compound
+  - name: Automations - Reactive
     tags:
       - expected:success
     description: *integration_tests
     schedule: *every_five_minutes
-    entrypoint: flows/automation-assessments.py:assess_compound_automation
+    entrypoint: flows/automation-assessments.py:assess_reactive_automation
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Automations - Sequence
@@ -147,6 +139,14 @@ deployments:
     description: *integration_tests
     schedule: *every_five_minutes
     entrypoint: flows/hello-world.py:hello_world_entry
+    work_pool: *kubernetes_prd_internal_tools
+
+  - name: Integration test workspace - ensure automations exist
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_three_hours
+    entrypoint: flows/ensure-integration-automations.py:ensure_integrations_automations
     work_pool: *kubernetes_prd_internal_tools
 
   - name: Secret Block
