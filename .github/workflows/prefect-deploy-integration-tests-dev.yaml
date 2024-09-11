@@ -48,6 +48,7 @@ jobs:
           --name "Automations - Proactive"
           --name "Automations - Reactive"
           --name "Automations - Sequence"
+          --name "Events - Streaming"
           --name "Flow Pauses"
           --name "Flow Results"
           --name "Flow Retries With Subflows"
