@@ -20,6 +20,7 @@ from prefect.events.filters import (
 # out more quickly than that to avoid multiple runs stacking up
 INTEGRATION_TEST_INTERVAL = 5 * 60
 INTEGRATION_TEST_TIMEOUT = INTEGRATION_TEST_INTERVAL - 60
+EVENT_TIMEOUT = INTEGRATION_TEST_TIMEOUT - 60
 
 
 @asynccontextmanager
@@ -126,15 +127,18 @@ async def assess_reactive_automation():
                         )
                     )
 
-            logger.info("Waiting for automation to fire...")
+            logger.info("Waiting %ss for automation to fire...", EVENT_TIMEOUT)
             # Wait until we see the automation triggered event, or fail if it takes
-            # longer than 60 seconds.  The reactive trigger should fire almost
-            # immediately.
+            # longer than EVENT_TIMEOUT.  The reactive trigger should fire almost
+            # immediately, and the event may take a little bit of time to be seen on
+            # the event stream.
             try:
-                async with asyncio.timeout(60):
+                async with asyncio.timeout(EVENT_TIMEOUT):
                     await listener
             except asyncio.TimeoutError:
-                raise Exception("Reactive automation did not trigger within 60s")
+                raise Exception(
+                    f"Reactive automation did not trigger within {EVENT_TIMEOUT}s"
+                )
 
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
@@ -181,15 +185,18 @@ async def assess_proactive_automation():
                         )
                     )
 
-            logger.info("Waiting for automation to fire...")
+            logger.info("Waiting %ss for automation to fire...", EVENT_TIMEOUT)
             # Wait until we see the automation triggered event, or fail if it takes
-            # longer than 60 seconds.  The proactive trigger should take a little over
-            # 15s to fire.
+            # longer than EVENT_TIMEOUT.  The proactive trigger should take a little over
+            # 15s to fire, and the event may take a little bit of time to be seen on
+            # the event stream.
             try:
-                async with asyncio.timeout(60):
+                async with asyncio.timeout(EVENT_TIMEOUT):
                     await listener
             except asyncio.TimeoutError:
-                raise Exception("Proactive automation did not trigger within 60s")
+                raise Exception(
+                    f"Proactive automation did not trigger within {EVENT_TIMEOUT}s"
+                )
 
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
@@ -251,15 +258,18 @@ async def assess_compound_automation():
                     )
                 )
 
-            logger.info("Waiting for automation to fire...")
+            logger.info("Waiting %ss for automation to fire...", EVENT_TIMEOUT)
             # Wait until we see the automation triggered event, or fail if it takes
-            # longer than 60 seconds.  The compound trigger should fire almost
-            # immediately.
+            # longer than EVENT_TIMEOUT.  The compound trigger should fire almost
+            # immediately, and the event may take a little bit of time to be seen on
+            # the event stream.
             try:
-                async with asyncio.timeout(60):
+                async with asyncio.timeout(EVENT_TIMEOUT):
                     await listener
             except asyncio.TimeoutError:
-                raise Exception("Compound automation did not trigger within 60s")
+                raise Exception(
+                    f"Compound automation did not trigger within {EVENT_TIMEOUT}s"
+                )
 
 
 @flow(timeout_seconds=INTEGRATION_TEST_TIMEOUT)
@@ -330,15 +340,18 @@ async def assess_sequence_automation():
                     )
                 )
 
-            logger.info("Waiting for automation to fire...")
+            logger.info("Waiting %ss for automation to fire...", EVENT_TIMEOUT)
             # Wait until we see the automation triggered event, or fail if it takes
-            # longer than 60 seconds.  The compound trigger should fire almost
-            # immediately.
+            # longer than EVENT_TIMEOUT.  The compound trigger should fire almost
+            # immediately, and the event may take a little bit of time to be seen on
+            # the event stream.
             try:
-                async with asyncio.timeout(60):
+                async with asyncio.timeout(EVENT_TIMEOUT):
                     await listener
             except asyncio.TimeoutError:
-                raise Exception("Sequence automation did not trigger within 60s")
+                raise Exception(
+                    f"Sequence automation did not trigger within {EVENT_TIMEOUT}s"
+                )
 
 
 if __name__ == "__main__":
