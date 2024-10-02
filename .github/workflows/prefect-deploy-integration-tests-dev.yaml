@@ -1,5 +1,5 @@
 ---
-name: Deploy Prefect integration-tests (workspace) flows - dev
+name: Deploy Prefect integration-tests Workspace Flows - Dev
 
 "on":
   push:
@@ -7,7 +7,6 @@ name: Deploy Prefect integration-tests (workspace) flows - dev
       - main
   workflow_dispatch: {}
 
-# Do not grant jobs any permissions by default
 permissions: {}
 
 jobs:
@@ -16,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PREFECT_CLOUD_API_URL: https://api.prefect.dev/api
+      PREFECT_API_KEY: ${{ secrets.PREFECT_DEV_INTEGRATION_TESTS_WORKSPACE_API_KEY }}
     permissions:
       # required to read from the repo
       contents: read
@@ -32,13 +32,6 @@ jobs:
       - name: Install Prefect
         shell: bash
         run: pip install -q prefect
-
-      - name: Login to Prefect
-        run: |
-          prefect cloud login \
-          --key  ${{ secrets.PREFECT_DEV_INTEGRATION_TESTS_WORKSPACE_API_KEY }} \
-          --workspace prefect-dev/integration-tests
-        shell: bash
 
       - name: Deploy all flows
         shell: bash
