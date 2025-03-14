@@ -53,6 +53,7 @@ jobs:
           --name "Flow Retries With Subflows"
           --name "Flow Retries"
           --name "Hello Tasks"
+          --name "Hello World - Managed"
           --name "Integration test workspace - ensure automations exist"
           --name "Secret Block"
           --name "Task Burst"

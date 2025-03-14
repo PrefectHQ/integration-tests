@@ -44,3 +44,4 @@ jobs:
           --name "Automations Tracer"
           --name "Hello Tasks - Helm"
           --name "Hello World - Helm"
+          --name "Hello World - Managed"
