@@ -29,6 +29,9 @@ definitions:
         namespace: integration-tests-prd-helm
         service_account_name: prefect-worker-cloud
 
+    managed-work-pool: &managed-work-pool
+      name: managed-work-pool
+
 deployments:
   # Prd Only
   - name: Automations Tracer
@@ -41,6 +44,14 @@ deployments:
     work_pool:
       name: kubernetes-prd-internal-tools
       work_queue_name: integration-tests
+
+  - name: Hello World - Managed
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/hello-world.py:hello_world_entry
+    work_pool: *managed-work-pool
 
   - name: Hello Tasks - Helm
     tags:
