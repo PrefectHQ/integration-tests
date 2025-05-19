@@ -32,3 +32,41 @@ Then run:
 prefect profiles use server
 prefect --no-prompt deploy --name "Flow Pauses" --name "Flow Results" --name "Flow Retries With Subflows" --name "Flow Retries" --name "Hello Tasks" --name "Secret Block" --name "Task Burst" --name "Task Results" --name "Task Retries"
 ```
+
+## Local testing with Docker Compose
+
+There is also a Docker Compose setup you can use to bootstrap a local instance
+of Prefect OSS.
+
+First, start Prefect OSS:
+
+```bash
+docker compose up -d
+```
+
+Next, set your Prefect profile to target the local instance of Prefect OSS:
+
+```bash
+prefect profile create local
+prefect profile use local
+prefect profile set PREFECT_API_URL="http://localhost:4200/api"
+```
+
+Now, start the workers:
+
+```bash
+# Install dependencies
+pip install prefect prefect-docker
+
+# Start the workers matching the names in prefect.yaml
+prefect worker start --pool "kubernetes-prd-internal-tools"
+prefect worker start --pool "managed-work-pool"
+```
+
+Finally, create the deployments:
+
+```bash
+prefect deploy --no-prompt --all
+```
+
+You should see the deployments at [http://localhost:4200/deployments](http://localhost:4200/deployments).
