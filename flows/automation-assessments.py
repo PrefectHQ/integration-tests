@@ -61,6 +61,9 @@ async def create_or_replace_automation(
             yield automation
         finally:
             response = await prefect._client.delete(f"/automations/{automation['id']}")
+            if response.status_code == 404:
+                logger.info("Automation %s already deleted", automation["id"])
+                return
             response.raise_for_status()
 
 

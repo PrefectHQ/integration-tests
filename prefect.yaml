@@ -104,6 +104,14 @@ deployments:
     entrypoint: flows/automation-assessments.py:assess_sequence_automation
     work_pool: *kubernetes_prd_internal_tools
 
+  - name: Automations - Actions
+    tags:
+      - expected:success
+    description: *integration_tests
+    schedule: *every_five_minutes
+    entrypoint: flows/automations-actions-test.py:assess_automation_actions
+    work_pool: *kubernetes_prd_internal_tools
+
   - name: Events - Streaming
     tags:
       - expected:success
