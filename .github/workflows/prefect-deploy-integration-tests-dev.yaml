@@ -6,6 +6,8 @@ name: Deploy Prefect integration-tests Workspace Flows - Dev
     branches:
       - main
   workflow_dispatch: {}
+  schedule:
+    - cron: '11 16 * * 3'  # Every Wednesday at 11:11am ET (16:11 UTC)
 
 permissions: {}
 
