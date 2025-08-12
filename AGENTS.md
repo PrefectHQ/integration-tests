@@ -61,6 +61,7 @@ python flows/task-bursts.py
 - Most flows run on 5-minute intervals (`*/5 * * * *`)
 - Flows are tagged with `expected:success` or `expected:failure` based on intended behavior
 - Work pools: `kubernetes-prd-internal-tools` (main), `managed-work-pool` (managed flows), and `helm` work queue for Helm chart testing
+- **IMPORTANT**: When adding a new integration test, update `.github/workflows/prefect-deploy-integration-tests-{dev,stg}.yaml` to include the deployment name. Production deployments are hand-selected and not automatically added.
 
 ### Flow Patterns
 - All flows use `@flow` decorator from Prefect
