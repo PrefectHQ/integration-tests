@@ -1,5 +1,5 @@
 ---
-name: Deploy Prefect integration-tests Workspace Flows - Pev
+name: Deploy Prefect integration-tests Workspace Flows - Prd
 
 "on":
   push:

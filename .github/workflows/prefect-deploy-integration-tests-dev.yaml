@@ -43,6 +43,7 @@ jobs:
         shell: bash
         run: >
           prefect --no-prompt deploy
+          --name "Automations - Actions"
           --name "Automations - Compound"
           --name "Automations - Proactive"
           --name "Automations - Reactive"
